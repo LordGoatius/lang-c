@@ -18,8 +18,8 @@
 //!
 //! Free functions apply the visitor to sub-nodes of any given AST node.
 
-use ast::*;
-use span::Span;
+use crate::ast::*;
+use crate::span::Span;
 
 pub trait Visit<'ast> {
     fn visit_identifier(&mut self, identifier: &'ast Identifier, span: &'ast Span) {
@@ -219,22 +219,6 @@ pub trait Visit<'ast> {
 
     fn visit_type_specifier(&mut self, type_specifier: &'ast TypeSpecifier, span: &'ast Span) {
         visit_type_specifier(self, type_specifier, span)
-    }
-
-    fn visit_ts18661_float_type(
-        &mut self,
-        ts18661_float_type: &'ast TS18661FloatType,
-        span: &'ast Span,
-    ) {
-        visit_ts18661_float_type(self, ts18661_float_type, span)
-    }
-
-    fn visit_ts18661_float_format(
-        &mut self,
-        ts18661_float_format: &'ast TS18661FloatFormat,
-        span: &'ast Span,
-    ) {
-        visit_ts18661_float_format(self, ts18661_float_format, span)
     }
 
     fn visit_struct_type(&mut self, struct_type: &'ast StructType, span: &'ast Span) {
@@ -579,14 +563,10 @@ pub fn visit_float_suffix<'ast, V: Visit<'ast> + ?Sized>(
 }
 
 pub fn visit_float_format<'ast, V: Visit<'ast> + ?Sized>(
-    visitor: &mut V,
-    float_format: &'ast FloatFormat,
-    span: &'ast Span,
+    _visitor: &mut V,
+    _float_format: &'ast FloatFormat,
+    _span: &'ast Span,
 ) {
-    match *float_format {
-        FloatFormat::TS18661Format(ref f) => visitor.visit_ts18661_float_type(f, span),
-        _ => {}
-    }
 }
 
 pub fn visit_string_literal<'ast, V: Visit<'ast> + ?Sized>(
@@ -960,7 +940,7 @@ pub fn visit_storage_class_specifier<'ast, V: Visit<'ast> + ?Sized>(
 pub fn visit_type_specifier<'ast, V: Visit<'ast> + ?Sized>(
     visitor: &mut V,
     type_specifier: &'ast TypeSpecifier,
-    span: &'ast Span,
+    _span: &'ast Span,
 ) {
     match *type_specifier {
         TypeSpecifier::Atomic(ref a) => visitor.visit_type_name(&a.node, &a.span),
@@ -968,24 +948,8 @@ pub fn visit_type_specifier<'ast, V: Visit<'ast> + ?Sized>(
         TypeSpecifier::Enum(ref e) => visitor.visit_enum_type(&e.node, &e.span),
         TypeSpecifier::TypedefName(ref t) => visitor.visit_identifier(&t.node, &t.span),
         TypeSpecifier::TypeOf(ref t) => visitor.visit_type_of(&t.node, &t.span),
-        TypeSpecifier::TS18661Float(ref t) => visitor.visit_ts18661_float_type(t, span),
         _ => {}
     }
-}
-
-pub fn visit_ts18661_float_type<'ast, V: Visit<'ast> + ?Sized>(
-    visitor: &mut V,
-    ts18661_float_type: &'ast TS18661FloatType,
-    span: &'ast Span,
-) {
-    visitor.visit_ts18661_float_format(&ts18661_float_type.format, span);
-}
-
-pub fn visit_ts18661_float_format<'ast, V: Visit<'ast> + ?Sized>(
-    _visitor: &mut V,
-    _ts18661_float_format: &'ast TS18661FloatFormat,
-    _span: &'ast Span,
-) {
 }
 
 pub fn visit_struct_type<'ast, V: Visit<'ast> + ?Sized>(

@@ -20,7 +20,7 @@
 //! - statement expressions
 //! - `typeof` type specifiers
 
-use span::Node;
+use crate::span::Node;
 
 // From 6.4 Lexical elements
 
@@ -137,12 +137,6 @@ pub enum FloatFormat {
     Double,
     /// `l` suffix
     LongDouble,
-    /// [ISO/IEC TS 18661-2:2015](http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1912.pdf)
-    /// `df`, `dd`, `dl` suffixes
-    ///
-    /// [ISO/IEC TS 18661-3:2015](http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1945.pdf)
-    /// `fN`, `fNx`, `dN`, `dNx` suffixes
-    TS18661Format(TS18661FloatType),
 }
 
 /// String literal
@@ -595,6 +589,12 @@ pub enum StorageClassSpecifier {
 /// (C11 6.7.2)
 #[derive(Debug, PartialEq, Clone)]
 pub enum TypeSpecifier {
+    /// `s9`
+    S9,
+    /// `s27`
+    S27,
+    /// `ssize`
+    Ssize,
     /// `void`
     Void,
     /// `char`
@@ -635,38 +635,6 @@ pub enum TypeSpecifier {
     ///
     /// [GNU extension](https://gcc.gnu.org/onlinedocs/gcc/Typeof.html)
     TypeOf(Node<TypeOf>),
-    /// Floating point types with guaranteed width and representation
-    ///
-    /// `_Float16`, `_Float32`, `_Float64`, `_Float128`
-    ///
-    /// `_Float16x`, `_Float32x`, `_Float64x`, `_Float128x`
-    ///
-    /// `_Decimal16`, `_Decimal32`, `_Decimal64`, `_Decimal128`
-    ///
-    /// `_Decimal16x`, `_Decimal32x`, `_Decimal64x`, `_Decimal128x`
-    ///
-    /// [ISO/IEC TS 18661-3:2015](http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1945.pdf)
-    TS18661Float(TS18661FloatType),
-}
-
-/// Floating point type with guaranteed width and format
-///
-/// [ISO/IEC TS 18661-3:2015](http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1945.pdf)
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-pub struct TS18661FloatType {
-    pub format: TS18661FloatFormat,
-    pub width: usize,
-}
-
-/// Floating point formats
-///
-/// [ISO/IEC TS 18661-3:2015](http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1945.pdf)
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-pub enum TS18661FloatFormat {
-    BinaryInterchange,
-    BinaryExtended,
-    DecimalInterchange,
-    DecimalExtended,
 }
 
 // From 6.7.2.1

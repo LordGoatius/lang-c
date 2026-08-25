@@ -10,11 +10,11 @@
 //! let s = &mut String::new();
 //! Printer::new(s).visit_translation_unit(unit);
 //! ```
-use std::fmt;
+use std::fmt::{self, Write};
 
-use ast::*;
-use span::Span;
-use visit::*;
+use crate::ast::*;
+use crate::span::Span;
+use crate::visit::*;
 
 /// Printing visitor
 ///
@@ -22,16 +22,16 @@ use visit::*;
 /// Each line contains name of the AST node type, followed by the enum variant
 /// (when it does not match name of contained node), and primitive fields.
 pub struct Printer<'a> {
-    w: &'a mut fmt::Write,
+    w: &'a mut dyn fmt::Write,
     offset: usize,
 }
 
 impl<'a> Printer<'a> {
-    pub fn new(w: &mut fmt::Write) -> Printer {
+    pub fn new(w: &mut dyn fmt::Write) -> Printer<'_> {
         Printer { w: w, offset: 0 }
     }
 
-    fn block(&mut self) -> Printer {
+    fn block(&mut self) -> Printer<'_> {
         writeln!(&mut self.w, "").unwrap();
         Printer {
             w: &mut self.w,
@@ -314,21 +314,6 @@ impl<'ast, 'a> Visit<'ast> for Printer<'a> {
         print_type_specifier(self, n);
         visit_type_specifier(&mut self.block(), n, span);
     }
-    fn visit_ts18661_float_type(&mut self, n: &'ast TS18661FloatType, span: &'ast Span) {
-        self.name("TS18661FloatType");
-        self.field(n.width);
-        visit_ts18661_float_type(&mut self.block(), n, span);
-    }
-    fn visit_ts18661_float_format(&mut self, n: &'ast TS18661FloatFormat, span: &'ast Span) {
-        self.name("TS18661FloatFormat");
-        self.field(match *n {
-            TS18661FloatFormat::BinaryInterchange => "BinaryInterchange",
-            TS18661FloatFormat::BinaryExtended => "BinaryExtended",
-            TS18661FloatFormat::DecimalInterchange => "DecimalInterchange",
-            TS18661FloatFormat::DecimalExtended => "DecimalExtended",
-        });
-        visit_ts18661_float_format(&mut self.block(), n, span);
-    }
     fn visit_struct_type(&mut self, n: &'ast StructType, span: &'ast Span) {
         self.name("StructType");
         visit_struct_type(&mut self.block(), n, span);
@@ -556,7 +541,6 @@ fn print_float_format<'ast>(p: &mut Printer, n: &'ast FloatFormat) {
         FloatFormat::Float => p.w.write_str(" Float").unwrap(),
         FloatFormat::Double => p.w.write_str(" Double").unwrap(),
         FloatFormat::LongDouble => p.w.write_str(" LongDouble").unwrap(),
-        _ => {}
     }
 }
 fn print_declarator_kind<'ast>(p: &mut Printer, n: &'ast DeclaratorKind) {
@@ -632,13 +616,11 @@ struct Escape<'a>(&'a str);
 
 impl<'a> fmt::Display for Escape<'a> {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        use std::fmt::Write;
-
         for c in self.0.chars() {
             match c {
-                '"' | '\'' | '\\' => try!(write!(fmt, "\\{}", c)),
-                ' '...'~' => try!(fmt.write_char(c)),
-                _ => try!(write!(fmt, "\\u{{{:04x}}}", c as u32)),
+                '"' | '\'' | '\\' => write!(fmt, "\\{}", c)?,
+                ' '..='~' => fmt.write_char(c)?,
+                _ => write!(fmt, "\\u{{{:04x}}}", c as u32)?,
             }
         }
 

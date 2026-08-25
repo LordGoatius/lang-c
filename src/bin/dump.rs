@@ -1,7 +1,5 @@
 //! Parse a C file and dump the AST.
 
-extern crate lang_c;
-
 use std::process::exit;
 
 use lang_c::driver::{Config, Flavor};
@@ -23,6 +21,8 @@ fn main() {
             quiet = true;
         } else if opt.starts_with("-") {
             config.cpp_options.push(opt);
+        } else if opt.ends_with(".h") {
+            config.headers.push(opt);
         } else {
             if source.is_none() {
                 source = Some(opt);
@@ -43,14 +43,15 @@ fn main() {
 
     match lang_c::driver::parse(&config, &source) {
         Ok(parse) => {
-            if !quiet {
-                let mut buf = String::new();
-                {
-                    let mut printer = lang_c::print::Printer::new(&mut buf);
-                    printer.visit_translation_unit(&parse.unit);
-                }
-                println!("{}", buf);
-            }
+            println!("{:#?}", parse);
+            // if !quiet {
+            //     let mut buf = String::new();
+            //     {
+            //         let mut printer = lang_c::print::Printer::new(&mut buf);
+            //         printer.visit_translation_unit(&parse.unit);
+            //     }
+            //     println!("{}", buf);
+            // }
         }
         Err(err) => {
             println!("{}", err);

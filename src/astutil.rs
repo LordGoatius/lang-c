@@ -1,5 +1,5 @@
-use ast::*;
-use span::{Node, Span};
+use crate::ast::*;
+use crate::span::{Node, Span};
 
 #[cfg_attr(test, derive(Debug, PartialEq, Clone))]
 pub enum Operation {
@@ -81,18 +81,6 @@ pub fn with_ext(mut d: Node<Declarator>, e: Option<Vec<Node<Extension>>>) -> Nod
         d.node.extensions.extend(e);
     }
     d
-}
-
-pub fn ts18661_float(binary: bool, width: usize, extended: bool) -> TS18661FloatType {
-    TS18661FloatType {
-        format: match (binary, extended) {
-            (true, false) => TS18661FloatFormat::BinaryInterchange,
-            (true, true) => TS18661FloatFormat::BinaryExtended,
-            (false, false) => TS18661FloatFormat::DecimalInterchange,
-            (false, true) => TS18661FloatFormat::DecimalExtended,
-        },
-        width: width,
-    }
 }
 
 pub fn int_suffix(mut s: &str) -> Result<IntegerSuffix, &'static str> {

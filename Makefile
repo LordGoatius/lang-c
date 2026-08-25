@@ -3,8 +3,11 @@
 peg?=rust-peg
 
 all: src/parser.rs
+	sed -i 's/\.\.\./..=/g' src/parser.rs
+	sed -i 's/use ast/use crate\:\:ast/g' src/parser.rs
+	sed -i 's/use env/use crate\:\:env/g' src/parser.rs
+	sed -i 's/use span/use crate\:\:span/g' src/parser.rs
 	cargo b --lib --features '$(features)'
-	cargo t --features '$(features)'
 
 trace:
 	rm -f src/parser.rs

@@ -159,7 +159,6 @@ float_suffix_inner -> FloatSuffix =
     }
 
 float_format -> FloatFormat =
-    f:ts18661_float_suffix { FloatFormat::TS18661Format(f) } /
     [fF] { FloatFormat::Float } /
     [lL] { FloatFormat::LongDouble } /
     { FloatFormat::Double }
@@ -616,8 +615,9 @@ type_specifier_unique -> TypeSpecifier =
     t:typedef_name { TypeSpecifier::TypedefName(t) }
 
 type_specifier_nonunique -> TypeSpecifier =
-    K<"char"> { TypeSpecifier::Char } /
-    K<"short"> { TypeSpecifier::Short } /
+    K<"ssize"> { TypeSpecifier::Ssize } /
+    K<"s9"> { TypeSpecifier::S9 } /
+    K<"s27"> { TypeSpecifier::S27 } /
     K<"int"> { TypeSpecifier::Int } /
     K<"long"> { TypeSpecifier::Long } /
     K<"float"> { TypeSpecifier::Float } /
@@ -625,7 +625,6 @@ type_specifier_nonunique -> TypeSpecifier =
     K<"signed" / gnu<"__signed" "__"?>> { TypeSpecifier::Signed } /
     K<"unsigned"> { TypeSpecifier::Unsigned } /
     K<"_Complex" / gnu<"__complex" "__"?>> { TypeSpecifier::Complex } /
-    t:K<ts18661_float_type_specifier> { TypeSpecifier::TS18661Float(t) } /
     gnu<typeof_specifier>
 
 struct_or_union_specifier -> StructType =
@@ -1374,46 +1373,6 @@ typeof_specifier -> TypeSpecifier =
 typeof_specifier0 -> TypeOf =
     e:node<expression0> { TypeOf::Expression(e) } /
     t:type_name { TypeOf::Type(t) }
-
-////
-// ISO/IEC TS 18661 series floating point extensions
-////
-
-ts18661_float_type_specifier -> TS18661FloatType =
-    ts18661_binary_float /
-    ts18661_decimal_float
-
-ts18661_binary_float -> TS18661FloatType =
-    "_Float" width:ts18661_binary_width extended:"x"? {
-        ts18661_float(true, width, extended.is_some())
-    }
-
-ts18661_binary_width -> usize =
-    n:$("16" / "32" / "64" / "128") {
-        n.parse().unwrap()
-    }
-
-ts18661_decimal_float -> TS18661FloatType =
-    "_Decimal" width:ts18661_decimal_width extended:"x"? {
-        ts18661_float(false, width, extended.is_some())
-    }
-
-ts18661_decimal_width -> usize =
-    n:$("32" / "64" / "128") {
-        n.parse().unwrap()
-    }
-
-ts18661_float_suffix -> TS18661FloatType =
-    ("df" / "DF") { ts18661_float(false, 32, false) } /
-    ("dd" / "DD") { ts18661_float(false, 64, false) } /
-    ("dl" / "DL") { ts18661_float(false, 128, false) } /
-
-    [fF] width:ts18661_binary_width extended:"x"? {
-        ts18661_float(true, width, extended.is_some())
-    } /
-    [dD] width:ts18661_decimal_width extended:"x"? {
-        ts18661_float(false, width, extended.is_some())
-    }
 
 ////
 // Clang extensions

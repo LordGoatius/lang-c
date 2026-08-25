@@ -7,10 +7,10 @@ use std::io;
 use std::path::Path;
 use std::process::Command;
 
-use ast::TranslationUnit;
-use env::Env;
-use loc;
-use parser::translation_unit;
+use crate::ast::TranslationUnit;
+use crate::env::Env;
+use crate::loc;
+use crate::parser::translation_unit;
 
 /// Parser configuration
 #[derive(Clone, Debug)]
@@ -19,6 +19,8 @@ pub struct Config {
     pub cpp_command: String,
     /// Options to pass to the preprocessor program
     pub cpp_options: Vec<String>,
+    /// Header files to include
+    pub headers: Vec<String>,
     /// Language flavor to parse
     pub flavor: Flavor,
 }
@@ -29,6 +31,7 @@ impl Config {
         Config {
             cpp_command: "gcc".into(),
             cpp_options: vec!["-E".into()],
+            headers: vec![],
             flavor: Flavor::GnuC11,
         }
     }
@@ -38,6 +41,7 @@ impl Config {
         Config {
             cpp_command: "clang".into(),
             cpp_options: vec!["-E".into()],
+            headers: vec![],
             flavor: Flavor::ClangC11,
         }
     }
@@ -128,15 +132,15 @@ impl SyntaxError {
         list.sort();
         for (i, t) in list.iter().enumerate() {
             if i > 0 {
-                try!(write!(fmt, ", "));
+                write!(fmt, ", ")?;
             }
-            try!(write!(fmt, "'{}'", t));
+            write!(fmt, "'{}'", t)?;
         }
 
         Ok(())
     }
 
-    pub fn get_location(&self) -> (loc::Location, Vec<loc::Location>) {
+    pub fn get_location(&self) -> (loc::Location<'_>, Vec<loc::Location<'_>>) {
         loc::get_location_for_offset(&self.source, self.offset)
     }
 }
@@ -144,14 +148,14 @@ impl SyntaxError {
 impl fmt::Display for SyntaxError {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         let (loc, inc) = self.get_location();
-        try!(write!(
+        write!(
             fmt,
             "unexpected token at \"{}\" line {} column {}, expected ",
             loc.file, loc.line, self.column
-        ));
-        try!(self.format_expected(fmt));
+        )?;
+        self.format_expected(fmt)?;
         for loc in inc {
-            try!(write!(fmt, "\n  included from {}:{}", loc.file, loc.line));
+            write!(fmt, "\n  included from {}:{}", loc.file, loc.line)?;
         }
         Ok(())
     }
@@ -164,7 +168,7 @@ pub fn parse<P: AsRef<Path>>(config: &Config, source: P) -> Result<Parse, Error>
         Err(e) => return Err(Error::PreprocessorError(e)),
     };
 
-    Ok(try!(parse_preprocessed(config, processed)))
+    Ok(parse_preprocessed(config, processed)?)
 }
 
 pub fn parse_preprocessed(config: &Config, source: String) -> Result<Parse, SyntaxError> {
@@ -196,9 +200,13 @@ fn preprocess(config: &Config, source: &Path) -> io::Result<String> {
         cmd.arg(item);
     }
 
+    for item in &config.headers {
+        cmd.arg(item);
+    }
+
     cmd.arg(source);
 
-    let output = try!(cmd.output());
+    let output = cmd.output()?;
 
     if output.status.success() {
         match String::from_utf8(output.stdout) {
