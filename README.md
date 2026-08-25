@@ -1,3 +1,14 @@
+# NOTICE
+
+THIS IS A FORK FOR MY OWN PURPOSES, NAMELY A TERNARY C
+(Temporary while I get a rustc fork working)
+
+It makes the following modifications:
+- Removed ts18661 float spec
+- Added 3 ternary primitive types
+- Changed default to clang (works better with rustc by default)
+- More to come as I work on it in the future
+
 # Lang-C
 
 [![Documentation](https://docs.rs/lang-c/badge.svg)](https://docs.rs/lang-c)

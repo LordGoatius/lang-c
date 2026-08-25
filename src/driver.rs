@@ -84,6 +84,7 @@ pub struct Parse {
 pub enum Error {
     PreprocessorError(io::Error),
     SyntaxError(SyntaxError),
+    FileError(&'static str),
 }
 
 impl From<SyntaxError> for Error {
@@ -97,6 +98,7 @@ impl fmt::Display for Error {
         match self {
             &Error::PreprocessorError(ref e) => write!(fmt, "preprocessor error: {}", e),
             &Error::SyntaxError(ref e) => write!(fmt, "syntax error: {}", e),
+            &Error::FileError(ref e) => write!(fmt, "file error: {}", e),
         }
     }
 }
@@ -106,6 +108,7 @@ impl error::Error for Error {
         match self {
             &Error::PreprocessorError(_) => "preprocessor error",
             &Error::SyntaxError(_) => "syntax error",
+            &Error::FileError(_) => "file input error",
         }
     }
 }
